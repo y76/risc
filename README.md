@@ -40,3 +40,49 @@ Notes
 
 The BeagleV-Ahead UART base address is 0xffe7014000 https://github.com/beagleboard/beaglev-ahead-u-boot/blob/beaglev-v2020.01-1.1.2/arch/riscv/dts/light-beagle.dts
 U-Boot loads the kernel at address 0x00200000 https://github.com/beagleboard/beaglev-ahead-u-boot/blob/beaglev-v2020.01-1.1.2/arch/riscv/cpu/start.S
+
+
+
+
+
+
+
+
+
+
+
+When running 
+Make clean
+Make
+sudo fastboot flash boot bare_app.bin
+
+
+Get this output 
+
+
+pavel@pavel:~/apps/beagledev$ sudo fastboot flash boot bare_app.bin
+Sending 'boot' (0 KB)                              OKAY [  0.007s]
+Writing 'boot'                                     OKAY [  0.002s]
+Finished. Total time: 0.014s
+
+
+
+On other side: 
+
+
+
+Starting download of 960 bytes
+
+downloading of 960 bytes finished
+
+
+
+And nothing happens. Probably something wrong with my linker/program/uart/who knows...
+
+
+
+
+Within u-boot:
+C910 Light# mw.l 0xffe7014000 0x41 1
+AC910 Light# 
+^^ prints out the "A"
