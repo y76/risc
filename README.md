@@ -87,3 +87,6 @@ C910 Light# mw.l 0xffe7014000 0x41 1
 AC910 Light# 
 ^^ prints out the "A"
 ![Screenshot_20250317_183834](https://github.com/user-attachments/assets/446b647b-9b5f-4c24-ba8a-f8e490491e0f)
+![Screenshot_20250317_184101](https://github.com/user-attachments/assets/60a2e13c-fc6e-4bee-9314-8f1be8009e33)
+![Screenshot_20250317_184116](https://github.com/user-attachments/assets/9cc25c83-2c22-4334-9edd-bcfcd2ab76ca)
+
