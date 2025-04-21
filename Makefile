@@ -1,73 +1,40 @@
-# Makefile for BeagleV-Ahead bare metal application
-
-# Toolchain
-CROSS_COMPILE = riscv64-linux-gnu-
+# Compiler and tools
+CROSS_COMPILE = riscv64-unknown-elf-
 CC = $(CROSS_COMPILE)gcc
-AS = $(CROSS_COMPILE)gcc
-LD = $(CROSS_COMPILE)gcc
+LD = $(CROSS_COMPILE)ld
 OBJCOPY = $(CROSS_COMPILE)objcopy
 OBJDUMP = $(CROSS_COMPILE)objdump
+FASTBOOT = fastboot
 
 # Flags
-ARCH_FLAGS = -march=rv64gc -mabi=lp64d
-CFLAGS = $(ARCH_FLAGS) -ffreestanding -O2 -Wall -Wextra
-ASFLAGS = $(ARCH_FLAGS)
-LDFLAGS = -nostdlib -nostartfiles $(ARCH_FLAGS) -T linker.ld
+CFLAGS = -march=rv64gc -mabi=lp64d -mcmodel=medany -static -nostdlib -ffreestanding -O2 -Wall
+LDFLAGS = -T link.ld
 
 # Source files
-SRCS_C = main.c uart.c
-SRCS_ASM = startup.S
-OBJS = $(SRCS_C:.c=.o) $(SRCS_ASM:.S=.o)
+SRCS = main.c
+OBJS = $(SRCS:.c=.o)
 
 # Output files
-TARGET = bare_app
-ELF = $(TARGET).elf
-BIN = $(TARGET).bin
-MAP = $(TARGET).map
-LST = $(TARGET).lst
+ELF = main.elf
+BIN = main.bin
 
-# Default target
-all: $(BIN) $(LST)
+all: $(BIN)
 
-# Compile C files
+$(ELF): $(OBJS) link.ld
+	$(LD) $(LDFLAGS) -o $@ $(OBJS)
+
+$(BIN): $(ELF)
+	$(OBJCOPY) -O binary $< $@
+	$(OBJDUMP) -d $(ELF) > main.lst
+
+run: 	$(BIN)
+	$(FASTBOOT) flash ram $(BIN)
+	$(FASTBOOT) reboot
+
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Compile assembly files
-%.o: %.S
-	$(AS) $(ASFLAGS) -c $< -o $@
-
-# Link
-$(ELF): $(OBJS) linker.ld
-	$(LD) $(LDFLAGS) -Wl,-Map=$(MAP) $(OBJS) -o $@
-
-# Generate binary
-$(BIN): $(ELF)
-	$(OBJCOPY) -O binary $< $@
-
-# Generate listing for debugging
-$(LST): $(ELF)
-	$(OBJDUMP) -D $< > $@
-
-# Clean
 clean:
-	rm -f $(OBJS) $(ELF) $(BIN) $(MAP) $(LST)
+	rm -f $(OBJS) $(ELF) $(BIN) main.lst
 
-# Phony targets
 .PHONY: all clean
-
-# Helpful debug target to dump UART address from u-boot
-uart-probe:
-	@echo "To find UART base address in U-Boot, use:"
-	@echo "  => md 0x10000000 10  # Try various addresses to locate UART registers"
-
-# Install to SD card (adjust path as needed)
-install: $(BIN)
-	@echo "Copying $(BIN) to SD card..."
-	cp $(BIN) /media/$(USER)/BOOT/
-
-# Run directly from U-Boot
-uboot-guide:
-	@echo "To run from U-Boot:"
-	@echo "  => fatload mmc 0:1 0x80000000 $(BIN)"
-	@echo "  => go 0x80000000"

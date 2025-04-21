@@ -1,44 +1,38 @@
-#include <stdint.h>
+#define UART_BASE 0xFFE7014000ULL  // UART0 base address on TH1520
+#define UART_THR  (UART_BASE + 0x00)  // Transmitter Holding Register
+#define UART_LSR  (UART_BASE + 0x14)  // Line Status Register
+#define UART_LSR_THRE 0x20  // Transmitter Holding Register Empty bit
 
-// Simple delay function
-void delay(uint32_t count) {
-    for (volatile uint32_t i = 0; i < count; i++) {
-        // Just wasting cycles
-    }
+static inline void mmio_write(unsigned long long addr, unsigned int value) {
+    *(volatile unsigned int*)addr = value;
 }
 
-// UART output function - using the address we confirmed works
+static inline unsigned int mmio_read(unsigned long long addr) {
+    return *(volatile unsigned int*)addr;
+}
+
+// Send a character to UART
 void uart_putc(char c) {
-    volatile uint32_t* uart_thr = (volatile uint32_t*)0xffe7014000;
-    *uart_thr = c;
+    while ((mmio_read(UART_LSR) & UART_LSR_THRE) == 0);
+    
+    mmio_write(UART_THR, c);
 }
 
-// Main function
-int main(void) {
-    // Initial delay to ensure everything is stable
-    delay(50000000);
-    
-    // Try to send some characters
-    uart_putc('H');
-    delay(1000000);
-    uart_putc('e');
-    delay(1000000);
-    uart_putc('l');
-    delay(1000000);
-    uart_putc('l');
-    delay(1000000);
-    uart_putc('o');
-    delay(1000000);
-    uart_putc('\r');
-    delay(1000000);
-    uart_putc('\n');
-    delay(1000000);
-    
-    // Endless loop
-    while (1) {
-        uart_putc('.');
-        delay(20000000);
+void uart_puts(const char *str) {
+    while (*str) {
+        uart_putc(*str++);
     }
-    
-    return 0;
+}
+
+// C entry point
+void main(void) {
+    uart_puts("Baremetal Hello, World!\r\n");
+    while (1) {}
+}
+
+// Assembly entry point - this will call our C main function
+__attribute__((section(".text.start")))
+void _start(void) {
+    // Call C entry point
+    main();
 }
