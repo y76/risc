@@ -1,12 +1,12 @@
 
-ENTRY(_start)
+ENTRY(_boot)
 
 MEMORY {
     RAM (rwx) : ORIGIN = 0xFFE0000000, LENGTH = 0x180000
 }
 
 SECTIONS {
-    . = ORIGIN(RAM);
+    . = 0xFFE0000000;
 
     .text : {
         *(.text.boot)
@@ -27,15 +27,11 @@ SECTIONS {
         *(.data*)
     } > RAM
 
-    .bss : ALIGN(8) {
+    .bss : {
         __bss_start = .;
         *(.bss*)
         *(COMMON)
         __bss_end = .;
-    } > RAM
-
-    .stack : ALIGN(16) {
-        _stack_top = . + 0x1000; /* 4KB stack grows down from here */
     } > RAM
 
     /DISCARD/ : {
