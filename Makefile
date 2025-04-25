@@ -1,3 +1,4 @@
+
 # Compiler and tools
 CROSS_COMPILE = riscv64-unknown-elf-
 CC = $(CROSS_COMPILE)gcc
@@ -11,8 +12,9 @@ CFLAGS = -march=rv64gc -mabi=lp64d -mcmodel=medany -static -nostdlib -ffreestand
 LDFLAGS = -T link.ld
 
 # Source files
-SRCS = main.c
+SRCS = boot.S main.c
 OBJS = $(SRCS:.c=.o)
+OBJS := $(OBJS:.S=.o)
 
 # Output files
 ELF = main.elf
@@ -21,17 +23,20 @@ BIN = main.bin
 all: $(BIN)
 
 $(ELF): $(OBJS) link.ld
-	$(LD) $(LDFLAGS) -o $@ $(OBJS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJS)
 
 $(BIN): $(ELF)
 	$(OBJCOPY) -O binary $< $@
 	$(OBJDUMP) -d $(ELF) > main.lst
 
-run: 	$(BIN)
+run: $(BIN)
 	$(FASTBOOT) flash ram $(BIN)
 	$(FASTBOOT) reboot
 
 %.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+%.o: %.S
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:

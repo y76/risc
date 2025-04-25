@@ -1,25 +1,44 @@
-MEMORY
-{
-    /* Start execution from DDR memory */
-    RAM (rwx) : ORIGIN = 0x00000000, LENGTH = 16M
+
+ENTRY(_start)
+
+MEMORY {
+    RAM (rwx) : ORIGIN = 0xFFE0000000, LENGTH = 0x180000
 }
 
-SECTIONS
-{
+SECTIONS {
+    . = ORIGIN(RAM);
+
     .text : {
+        *(.text.boot)
         *(.text.start)
-        *(.text)
+        *(.text*)
     } > RAM
-    
+
     .rodata : {
-        *(.rodata)
+        *(.rodata*)
     } > RAM
-    
+
+    .pmp_data : ALIGN(4) {
+        __pmp_data_start = .;
+        KEEP(*(.pmp_data))
+    } > RAM
+
     .data : {
-        *(.data)
+        *(.data*)
     } > RAM
-    
-    .bss : {
-        *(.bss)
+
+    .bss : ALIGN(8) {
+        __bss_start = .;
+        *(.bss*)
+        *(COMMON)
+        __bss_end = .;
     } > RAM
+
+    .stack : ALIGN(16) {
+        _stack_top = . + 0x1000; /* 4KB stack grows down from here */
+    } > RAM
+
+    /DISCARD/ : {
+        *(.eh_frame)
+    }
 }
