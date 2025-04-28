@@ -1,40 +1,25 @@
-
-ENTRY(_boot)
-
-MEMORY {
-    RAM (rwx) : ORIGIN = 0xFFE0000000, LENGTH = 0x180000
+MEMORY
+{
+    /* Start execution from DDR memory */
+    RAM (rwx) : ORIGIN = 0x00000000, LENGTH = 16M
 }
 
-SECTIONS {
-    . = 0xFFE0000000;
-
+SECTIONS
+{
     .text : {
-        *(.text.boot)
         *(.text.start)
-        *(.text*)
+        *(.text)
     } > RAM
 
     .rodata : {
-        *(.rodata*)
-    } > RAM
-
-    .pmp_data : ALIGN(4) {
-        __pmp_data_start = .;
-        KEEP(*(.pmp_data))
+        *(.rodata)
     } > RAM
 
     .data : {
-        *(.data*)
+        *(.data)
     } > RAM
 
     .bss : {
-        __bss_start = .;
-        *(.bss*)
-        *(COMMON)
-        __bss_end = .;
+        *(.bss)
     } > RAM
-
-    /DISCARD/ : {
-        *(.eh_frame)
-    }
 }
